@@ -7,7 +7,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building..'
-                dir("api") {
+                dir("SkillsMatrixProto") {
                     sh 'chmod +x gradlew'
                     sh './gradlew -s build'
                 }
@@ -16,11 +16,11 @@ pipeline {
         stage('Containerize') {
             steps {
                 echo 'Containerizing..'
-                dir("api") {
-                    sh 'docker build -t bigbrass/springbootapi .'
+                dir("SkillsMatrixProto") {
+                    sh 'docker build -t michaelmernin/skills_matrix_test_perf .'
                     withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'p', usernameVariable: 'u')]) {
                         sh "docker login -u=${u} -p=${p}"
-                        sh 'docker push bigbrass/springbootapi:latest'
+                        sh 'docker push michaelmernin/skills_matrix_test_perf:latest'
                     }
                 }
             }
