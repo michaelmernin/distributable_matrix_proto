@@ -1,0 +1,38 @@
+#!/usr/bin/env groovy
+
+pipeline {
+    agent { label 'master' }
+
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building..'
+                dir("api") {
+                    sh 'chmod +x gradlew'
+                    sh './gradlew -s build'
+                }
+            }
+        }
+        stage('Containerize') {
+            steps {
+                echo 'Containerizing..'
+                dir("api") {
+                    sh 'docker build -t bigbrass/springbootapi .'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub', passwordVariable: 'p', usernameVariable: 'u')]) {
+                        sh "docker login -u=${u} -p=${p}"
+                        sh 'docker push bigbrass/springbootapi:latest'
+                    }
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying....'
+                dir("ansible") {
+                    sh 'chmod 400 ec2.pem'
+                    sh 'ansible-playbook main.yml -i aws'
+                }
+            }
+        }
+    }
+}
